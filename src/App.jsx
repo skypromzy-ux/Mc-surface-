@@ -105,21 +105,27 @@ export default function App(){
     setPaying(true);
     setPayError("");
     const r="TKT-"+Date.now();
-    window.PaystackPop.setup({
-      key:PK,email:form.email,amount:total*100,currency:"NGN",ref:r,
-      metadata:{custom_fields:[{display_name:"Name",variable_name:"name",value:form.name}]},
-      callback:async(res)=>{
-        try{
-          await confirmOrder(form,sel.map(t=>({name:t.name,qty:qtys[t.id],price:t.price})),res.reference);
-          setTxRef(res.reference);setStep("success");
-        }catch(e){
-          setPayError("Payment received, but we couldn't confirm it automatically. Save this reference and contact us: "+res.reference);
-        }finally{
-          setPaying(false);
-        }
-      },
-      onClose:()=>setPaying(false),
-    }).openIframe();
+    try{
+      window.PaystackPop.setup({
+        key:PK,email:form.email,amount:total*100,currency:"NGN",ref:r,
+        metadata:{custom_fields:[{display_name:"Name",variable_name:"name",value:form.name}]},
+        callback:async(res)=>{
+          try{
+            await confirmOrder(form,sel.map(t=>({name:t.name,qty:qtys[t.id],price:t.price})),res.reference);
+            setTxRef(res.reference);setStep("success");
+          }catch(e){
+            setPayError("Payment received, but we couldn't confirm it automatically. Save this reference and contact us: "+res.reference);
+          }finally{
+            setPaying(false);
+          }
+        },
+        onClose:()=>setPaying(false),
+      }).openIframe();
+    }catch(e){
+      console.error("Paystack setup/openIframe failed:",e);
+      setPayError("Payment couldn't open ("+(e&&e.message?e.message:"unknown error")+"). Please try again.");
+      setPaying(false);
+    }
   }
 
   function reset(){setQtys({regular:0,vip:0,table:0,gold:0,premium:0});setForm({name:"",email:"",phone:""});setStep("tickets");setTxRef("");setPayError("");}
