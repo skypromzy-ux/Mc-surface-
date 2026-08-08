@@ -106,21 +106,22 @@ export default function App(){
     setPayError("");
     const r="TKT-"+Date.now();
     try{
-      window.PaystackPop.setup({
+      const paystack=new window.PaystackPop();
+      paystack.newTransaction({
         key:PK,email:form.email,amount:total*100,currency:"NGN",ref:r,
         metadata:{custom_fields:[{display_name:"Name",variable_name:"name",value:form.name}]},
-        callback:async(res)=>{
+        onSuccess:async(transaction)=>{
           try{
-            await confirmOrder(form,sel.map(t=>({name:t.name,qty:qtys[t.id],price:t.price})),res.reference);
-            setTxRef(res.reference);setStep("success");
+            await confirmOrder(form,sel.map(t=>({name:t.name,qty:qtys[t.id],price:t.price})),transaction.reference);
+            setTxRef(transaction.reference);setStep("success");
           }catch(e){
-            setPayError("Payment received, but we couldn't confirm it automatically. Save this reference and contact us: "+res.reference);
+            setPayError("Payment received, but we couldn't confirm it automatically. Save this reference and contact us: "+transaction.reference);
           }finally{
             setPaying(false);
           }
         },
-        onClose:()=>setPaying(false),
-      }).openIframe();
+        onCancel:()=>setPaying(false),
+      });
     }catch(e){
       console.error("Paystack setup/openIframe failed:",e);
       setPayError("Payment couldn't open ("+(e&&e.message?e.message:"unknown error")+"). Please try again.");
