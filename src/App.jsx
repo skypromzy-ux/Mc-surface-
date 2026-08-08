@@ -115,7 +115,7 @@ export default function App(){
             await confirmOrder(form,sel.map(t=>({name:t.name,qty:qtys[t.id],price:t.price})),transaction.reference);
             setTxRef(transaction.reference);setStep("success");
           }catch(e){
-            setPayError("Payment received, but we couldn't confirm it automatically. Save this reference and contact us: "+transaction.reference);
+            setPayError("Payment received, but confirmation failed: "+(e&&e.message?e.message:"unknown")+". Reference: "+transaction.reference);
           }finally{
             setPaying(false);
           }
